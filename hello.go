@@ -1,19 +1,35 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 	"time"
+	"html/template"
+	"log"
 )
 
-func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// log the request
-		fmt.Fprintf(os.Stdout, "%s %s @ %v\n", r.Method, r.RequestURI, time.Now())
+type PageVariables struct {
+	Date 	string
+	Time 	string
+}
 
-		// output our response
-		fmt.Fprintf(w, "portfolio service is up\n")
-	})
+func Index(w http.ResponseWriter, r *http.Request) {
+	now := time.Now()
+	IndexVars := PageVariables{
+		Date: now.Format("02-01-2006"),
+		Time: now.Format("15:04:05"),
+	}
+
+	t, err := template.ParseFiles("index.html")
+	if err != nil {
+		log.Print("template parsing error: ", err)
+	}
+	err = t.Execute(w, IndexVars)
+	if err != nil {
+		log.Print("template executing error: ", err)
+	}
+}
+
+func main() {
+	http.HandleFunc("/", Index)
 	http.ListenAndServe(":8998", nil)
 }
